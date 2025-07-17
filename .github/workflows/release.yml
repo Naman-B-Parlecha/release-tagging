@@ -9,5 +9,9 @@ jobs:
   testing:
     runs-on: ubuntu-latest
     steps:
-      - name: Printing
-        run: echo "New Release"
+      - name: Finding SHA With lastest 
+        run: |
+          LATEST_TAG=$(git describe --tags $(git rev-list --list --tags --max-count=1))
+          COMMIT_SHA=$(git rev-list -n 1 $LATEST_TAG)
+          echo "LATEST TAG $LATEST_TAG and Commit $COMMIT_SHA"
+          git branch -r --consist $COMMIT_SHA
