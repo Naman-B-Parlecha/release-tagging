@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Printing
-        uses: echo "New Release"
+        run: echo "New Release"
