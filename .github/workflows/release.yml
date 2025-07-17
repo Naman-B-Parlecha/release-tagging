@@ -1,0 +1,13 @@
+name: Syncing Tags
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Printing
+        uses: echo "New Release"
