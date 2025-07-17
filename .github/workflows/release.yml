@@ -9,6 +9,9 @@ jobs:
   testing:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        
       - name: Finding SHA With lastest 
         run: |
           LATEST_TAG=$(git describe --tags $(git rev-list --list --tags --max-count=1))
