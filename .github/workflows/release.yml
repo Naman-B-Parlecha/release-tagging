@@ -32,24 +32,11 @@ jobs:
           RELEASE_BRANCH=$(git branch -r --contains ${{ env.COMMIT_SHA }} | sed 's/origin\///' | sed 's/^[[:space:]]*//' | head -n1)
           echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
       
-      - name: Debug Environment Variables
-        run: |
-          echo "Latest Tag: ${{ env.LATEST_TAG }}"
-          echo "Commit SHA: ${{ env.COMMIT_SHA }}"
-          echo "Release Branch: ${{ env.RELEASE_BRANCH }}"
-      
       - name: Create Pull Request
-        id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: new release
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
-          signoff: true
-          branch: ${{ env.RELEASE_BRANCH }}
-          delete-branch: false
-          title: 'New Thanos Release ${{ env.LATEST_TAG }}'
+          commit-message: syncing Tags
+          title: New Thanos Release ${{ env.LATEST_TAG }}
           body: |
             This PR merges the new release ${{ env.LATEST_TAG }} from branch ${{ env.RELEASE_BRANCH }} to main.
             
@@ -57,14 +44,9 @@ jobs:
             - Tag: ${{ env.LATEST_TAG }}
             - Commit SHA: ${{ env.COMMIT_SHA }}
             - Source Branch: ${{ env.RELEASE_BRANCH }}
-          draft: false
-
-      - name: Output PR Details
-        if: steps.cpr.outputs.pull-request-number
-        run: |
-          echo "Pull Request created: #${{ steps.cpr.outputs.pull-request-number }}"
-          echo "PR URL: ${{ steps.cpr.outputs.pull-request-url }}"
-
+          branch: ${{ env.RELEASE_BRANCH }}
+          base: main
+          
       # - name: Merging Release into main
       #   run: |
       #     git config --global user.name "github-actions[bot]"
