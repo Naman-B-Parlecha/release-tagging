@@ -1,2 +1,2 @@
 # release-tagging
-v6.0.3
+v6.0.6
