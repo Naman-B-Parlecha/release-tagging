@@ -44,8 +44,8 @@ jobs:
             - Tag: ${{ env.LATEST_TAG }}
             - Commit SHA: ${{ env.COMMIT_SHA }}
             - Source Branch: ${{ env.RELEASE_BRANCH }}
-          branch: ${{ env.RELEASE_BRANCH }}
-          base: main
+          branch: main
+          base: ${{ env.RELEASE_BRANCH }}
           
       # - name: Merging Release into main
       #   run: |
