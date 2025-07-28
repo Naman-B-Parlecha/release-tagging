@@ -18,6 +18,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
+      
       - name: Finding SHA with latest Tag
         run: |
           LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
@@ -27,20 +28,23 @@ jobs:
       
       - name: Finding Branch with SHA
         run: |
-          RELEASE_BRANCH=$(git branch -r --contains ${{ env.COMMIT_SHA }})
+          RELEASE_BRANCH=$(git branch -r --contains ${{ env.COMMIT_SHA }} | head -1 | xargs)
+          BRANCH_NAME=${RELEASE_BRANCH#origin/}
           echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
       
       - name: Checking variables
         run: |
           echo "LATEST_TAG=${{ env.LATEST_TAG }}"
           echo "COMMIT_SHA=${{ env.COMMIT_SHA }}"
           echo "RELEASE_BRANCH=${{ env.RELEASE_BRANCH }}"
+          echo "BRANCH_NAME=${{ env.BRANCH_NAME }}"
 
       - name: Reset promotion branch
         run: |
-          git fetch ${{ env.RELEASE_BRANCH }}
+          git fetch origin "${{ env.BRANCH_NAME }}"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: merge-${{ env.RELEASE_BRANCH }}
+          branch: merge-${{ env.BRANCH_NAME }}
