@@ -13,14 +13,12 @@ jobs:
   testing:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main branch
+      - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }} 
 
-      - name: Finding SHA with latest Tag
+      - name: Finding SHA with lastest Tag
         run: |
           LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
           COMMIT_SHA=$(git rev-list -n 1 $LATEST_TAG)
@@ -29,43 +27,20 @@ jobs:
       
       - name: Finding Branch with SHA
         run: |
-          RELEASE_BRANCH=$(git branch -r --contains ${{ env.COMMIT_SHA }} | sed 's/origin\///' | sed 's/^[[:space:]]*//' | head -n1)
+          RELEASE_BRANCH=$(git branch -r --contains ${{ env.COMMIT_SHA }})
           echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
-
-      - name: Create merge branch and merge release changes
-        run: |
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-            MERGE_BRANCH="merge-release-${{ env.LATEST_TAG }}"
-            git checkout -b $MERGE_BRANCH
-            
-            git merge origin/${{ env.RELEASE_BRANCH }} --no-ff -m "Merge release ${{ env.LATEST_TAG }} from ${{ env.RELEASE_BRANCH }}"
-            
-            echo "MERGE_BRANCH=$MERGE_BRANCH" >> $GITHUB_ENV
-            
+      
       - name: Create Pull Request
+        id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: "Sync release ${{ env.LATEST_TAG }} from ${{ env.RELEASE_BRANCH }} to main"
-          title: "Merge Release ${{ env.LATEST_TAG }} to Main"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update report
+          signoff: false
+          branch: ${{ env.RELEASE_BRANCH }}
+          delete-branch: false
+          title: 'Sync release from ${{ env.RELEASE_BRANCH }} to main'
           body: |
-            This PR merges release branch `${{ env.RELEASE_BRANCH }}` (tag: `${{ env.LATEST_TAG }}`) into `main`.
-            
-            **Release Details:**
-            - Tag: `${{ env.LATEST_TAG }}`
-            - Commit SHA: `${{ env.COMMIT_SHA }}`
-            - Source Branch: `${{ env.RELEASE_BRANCH }}`
-            
-            **What's included:**
-            - All commits from `${{ env.RELEASE_BRANCH }}`
-            - All code changes from the release
-            - Release notes and version updates
-            
-            This PR was automatically created after the release was published.
-            
-            ## Ready to merge!
-            All release branch code will be merged into main when this PR is approved.
-          branch: ${{ env.MERGE_BRANCH }}
-          base: main
-          delete-branch: true
+            This pull request syncs the latest release from branch `${{ env.RELEASE_BRANCH }}` into the `main` branch.
+            Please review the changes and merge if everything looks good.
+          draft: false
