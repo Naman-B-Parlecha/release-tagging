@@ -38,6 +38,7 @@ jobs:
           commit-message: Update report
           signoff: false
           branch: ${{ env.RELEASE_BRANCH }}
+          base: main
           delete-branch: false
           title: 'Sync release from ${{ env.RELEASE_BRANCH }} to main'
           body: |
