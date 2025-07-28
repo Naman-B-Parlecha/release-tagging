@@ -40,11 +40,25 @@ jobs:
           echo "RELEASE_BRANCH=${{ env.RELEASE_BRANCH }}"
           echo "BRANCH_NAME=${{ env.BRANCH_NAME }}"
 
-      - name: Reset promotion branch
+      - name: Fetch and merge release branch
         run: |
           git fetch origin "${{ env.BRANCH_NAME }}"
+          git checkout -b merge-${{ env.BRANCH_NAME }}
+          git merge origin/${{ env.BRANCH_NAME }} --no-ff -m "Merge ${{ env.BRANCH_NAME }} for release ${{ env.LATEST_TAG }}"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
           branch: merge-${{ env.BRANCH_NAME }}
+          title: "Merge ${{ env.BRANCH_NAME }} - Release ${{ env.LATEST_TAG }}"
+          body: |
+            ## Release Merge: ${{ env.LATEST_TAG }}
+            
+            This PR merges the release branch `${{ env.BRANCH_NAME }}` into main for release `${{ env.LATEST_TAG }}`.
+            
+            **Details:**
+            - **Tag:** ${{ env.LATEST_TAG }}
+            - **Commit SHA:** ${{ env.COMMIT_SHA }}
+            - **Source Branch:** ${{ env.BRANCH_NAME }}
+            
+            Automated changes by [create-pull-request](https://github.com/peter-evans/create-pull-request) GitHub action
