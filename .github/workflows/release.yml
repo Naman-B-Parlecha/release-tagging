@@ -13,9 +13,10 @@ jobs:
   testing:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }} 
 
@@ -31,11 +32,16 @@ jobs:
           RELEASE_BRANCH=$(git branch -r --contains ${{ env.COMMIT_SHA }} | sed 's/origin\///' | sed 's/^[[:space:]]*//' | head -n1)
           echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
 
-      - name: Checkout Release Branch
+      - name: Create merge branch and merge release changes
         run: |
-          git checkout ${{ env.RELEASE_BRANCH }}
+          MERGE_BRANCH="merge-release-${{ env.LATEST_TAG }}"
+          git checkout -b $MERGE_BRANCH
           
-      - name: Create Pull Request with Peter Evans
+          git merge origin/${{ env.RELEASE_BRANCH }} --no-ff -m "Merge release ${{ env.LATEST_TAG }} from ${{ env.RELEASE_BRANCH }}"
+          
+          echo "MERGE_BRANCH=$MERGE_BRANCH" >> $GITHUB_ENV
+          
+      - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
           commit-message: "Sync release ${{ env.LATEST_TAG }} from ${{ env.RELEASE_BRANCH }} to main"
@@ -57,7 +63,6 @@ jobs:
             
             ## Ready to merge!
             All release branch code will be merged into main when this PR is approved.
-          branch: ${{ env.RELEASE_BRANCH }}
+          branch: ${{ env.MERGE_BRANCH }}
           base: main
-          delete-branch: false 
-          
+          delete-branch: true
