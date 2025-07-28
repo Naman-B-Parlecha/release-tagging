@@ -58,13 +58,7 @@ jobs:
             - Commit SHA: ${{ env.COMMIT_SHA }}
             - Source Branch: ${{ env.RELEASE_BRANCH }}
           draft: false
-
-      - name: Output PR Details
-        if: steps.cpr.outputs.pull-request-number
-        run: |
-          echo "Pull Request created: #${{ steps.cpr.outputs.pull-request-number }}"
-          echo "PR URL: ${{ steps.cpr.outputs.pull-request-url }}"
-
+          
       # - name: Merging Release into main
       #   run: |
       #     git config --global user.name "github-actions[bot]"
