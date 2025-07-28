@@ -28,33 +28,36 @@ jobs:
       
       - name: Finding Branch with SHA
         run: |
-          # Remove 'origin/' prefix and get clean branch name
           RELEASE_BRANCH=$(git branch -r --contains ${{ env.COMMIT_SHA }} | sed 's/origin\///' | sed 's/^[[:space:]]*//' | head -n1)
           echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
 
-      # - name: Checkout release branch and prepare changes
-      #   run: |
-      #     git config --global user.name "github-actions[bot]"
-      #     git config --global user.email "github-actions[bot]@users.noreply.github.com"
-      #     git checkout ${{ env.RELEASE_BRANCH }}
-
-      - name: Create Pull Request
+      - name: Checkout Release Branch
+        run: |
+          git checkout ${{ env.RELEASE_BRANCH }}
+          
+      - name: Create Pull Request with Peter Evans
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: "Sync release ${{ env.LATEST_TAG }} to main"
-          title: "Sync Release ${{ env.LATEST_TAG }} to Main"
+          commit-message: "Sync release ${{ env.LATEST_TAG }} from ${{ env.RELEASE_BRANCH }} to main"
+          title: "Merge Release ${{ env.LATEST_TAG }} to Main"
           body: |
-            This PR syncs the new release ${{ env.LATEST_TAG }} from branch `${{ env.RELEASE_BRANCH }}` to `main`.
+            This PR merges release branch `${{ env.RELEASE_BRANCH }}` (tag: `${{ env.LATEST_TAG }}`) into `main`.
             
             **Release Details:**
-            - 🏷️ Tag: `${{ env.LATEST_TAG }}`
-            - 📝 Commit SHA: `${{ env.COMMIT_SHA }}`
-            - 🌿 Source Branch: `${{ env.RELEASE_BRANCH }}`
+            - Tag: `${{ env.LATEST_TAG }}`
+            - Commit SHA: `${{ env.COMMIT_SHA }}`
+            - Source Branch: `${{ env.RELEASE_BRANCH }}`
             
-            **Changes:**
-            - All commits from `${{ env.RELEASE_BRANCH }}` up to tag `${{ env.LATEST_TAG }}`
+            **What's included:**
+            - All commits from `${{ env.RELEASE_BRANCH }}`
+            - All code changes from the release
+            - Release notes and version updates
             
             This PR was automatically created after the release was published.
-          branch: main 
-          base: ${{ env.RELEASE_BRANCH }}
-          delete-branch: true
+            
+            ## Ready to merge!
+            All release branch code will be merged into main when this PR is approved.
+          branch: ${{ env.RELEASE_BRANCH }}
+          base: main
+          delete-branch: false 
+          
