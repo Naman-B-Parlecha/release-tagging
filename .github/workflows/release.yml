@@ -55,6 +55,6 @@ jobs:
             - All commits from `${{ env.RELEASE_BRANCH }}` up to tag `${{ env.LATEST_TAG }}`
             
             This PR was automatically created after the release was published.
-          branch: sync-release-${{ env.LATEST_TAG }}
-          base: main
+          branch: main 
+          base: ${{ env.RELEASE_BRANCH }}
           delete-branch: true
