@@ -46,8 +46,8 @@ jobs:
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           signoff: true
-          branch: ${{ env.RELEASE_BRANCH }}
-          base: main
+          branch: main
+          base: ${{ env.RELEASE_BRANCH }}
           delete-branch: false
           title: 'New Thanos Release ${{ env.LATEST_TAG }}'
           body: |
@@ -64,7 +64,7 @@ jobs:
         run: |
           echo "Pull Request created: #${{ steps.cpr.outputs.pull-request-number }}"
           echo "PR URL: ${{ steps.cpr.outputs.pull-request-url }}"
-          
+
       # - name: Merging Release into main
       #   run: |
       #     git config --global user.name "github-actions[bot]"
