@@ -39,7 +39,7 @@ jobs:
           echo "RELEASE_BRANCH=${{ env.RELEASE_BRANCH }}"
 
       - name: Make changes to pull request
-        run: date +%s > report.txt
+        run: git commit --allow-empty -m "merging new"
 
       - name: Create Pull Request
         id: cpr
