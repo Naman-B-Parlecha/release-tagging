@@ -38,6 +38,9 @@ jobs:
           echo "COMMIT_SHA=${{ env.COMMIT_SHA }}"
           echo "RELEASE_BRANCH=${{ env.RELEASE_BRANCH }}"
 
+      - name: Make changes to pull request
+        run: date +%s > report.txt
+
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v7
