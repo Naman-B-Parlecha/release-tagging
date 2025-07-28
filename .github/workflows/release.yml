@@ -43,11 +43,11 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: new release
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           signoff: true
-          branch: main
-          base: ${{ env.RELEASE_BRANCH }}
+          branch: ${{ env.RELEASE_BRANCH }}
           delete-branch: false
           title: 'New Thanos Release ${{ env.LATEST_TAG }}'
           body: |
