@@ -56,6 +56,7 @@ jobs:
         with:
           branch: merge-${{ env.BRANCH_NAME }}
           title: "Merge ${{ env.BRANCH_NAME }} - Release ${{ env.LATEST_TAG }}"
+          base: main
           body: |
             ## Release Merge: ${{ env.LATEST_TAG }}
             
