@@ -10,66 +10,27 @@ permissions:
   pull-requests: write
 
 jobs:
-  testing:
+  create-pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: main
       
-      - name: Finding SHA with latest Tag
+      - name: Find release branch
         run: |
           LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
           COMMIT_SHA=$(git rev-list -n 1 $LATEST_TAG)
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
-          echo "COMMIT_SHA=$COMMIT_SHA" >> $GITHUB_ENV
-      
-      - name: Finding Branch with SHA
-        run: |
-          RELEASE_BRANCH=$(git branch -r --contains ${{ env.COMMIT_SHA }} | head -1 | xargs)
-          BRANCH_NAME=${RELEASE_BRANCH#origin/}
-          echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-      
-      - name: Checking variables
-        run: |
-          echo "LATEST_TAG=${{ env.LATEST_TAG }}"
-          echo "COMMIT_SHA=${{ env.COMMIT_SHA }}"
-          echo "RELEASE_BRANCH=${{ env.RELEASE_BRANCH }}"
-          echo "BRANCH_NAME=${{ env.BRANCH_NAME }}"
-      
-      - name: Configure Git user
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-
-      - name: Fetch and merge release branch
-        run: |
-          git fetch origin "${{ env.BRANCH_NAME }}"
-          git checkout -b merge-${{ env.BRANCH_NAME }}
-          git merge origin/${{ env.BRANCH_NAME }} --no-ff -m "Merge ${{ env.BRANCH_NAME }} for release ${{ env.LATEST_TAG }}"
-          git push origin merge-${{ env.BRANCH_NAME }}
-          git checkout main
+          RELEASE_BRANCH=$(git branch -r --contains $COMMIT_SHA | head -1 | sed 's/origin\///' | xargs)
           
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: merge-${{ env.BRANCH_NAME }}
-          title: "Merge ${{ env.BRANCH_NAME }} - Release ${{ env.LATEST_TAG }}"
-          base: ${{ env.BRANCH_NAME }}
-          body: |
-            ## Release Merge: ${{ env.LATEST_TAG }}
-            
-            This PR merges the release branch `${{ env.BRANCH_NAME }}` into main for release `${{ env.LATEST_TAG }}`.
-            
-            **Details:**
-            - **Tag:** ${{ env.LATEST_TAG }}
-            - **Commit SHA:** ${{ env.COMMIT_SHA }}
-            - **Source Branch:** ${{ env.BRANCH_NAME }}
-            
-            Automated changes by [create-pull-request](https://github.com/peter-evans/create-pull-request) GitHub action
-          draft: false
-          maintainer-can-modify: true
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
+      
+      - name: Create PR using GitHub CLI
+        run: |
+          gh pr create \
+            --title "Merge ${{ env.RELEASE_BRANCH }} into main - Release ${{ env.LATEST_TAG }}" \
+            --body "Auto-generated PR to merge release ${{ env.LATEST_TAG }} into main" \
+            --head "${{ env.RELEASE_BRANCH }}" \
+            --base "main"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
