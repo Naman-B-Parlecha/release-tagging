@@ -2,38 +2,71 @@ name: Syncing Tags
 
 on:
   release:
-    types: [published]
-
-permissions:
+    types:
+      - published
+      
+permissions: 
   contents: write
   pull-requests: write
 
 jobs:
-  sync-release-branch:
+  testing:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout all branches and tags
+      - name: Checkout branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          fetch-tags: true
-
-      - name: Find latest tag and its branch
-        id: find_branch
+          ref: main
+      
+      - name: Finding SHA with latest Tag
         run: |
           LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
           COMMIT_SHA=$(git rev-list -n 1 $LATEST_TAG)
-          BRANCH=$(git branch -r --contains $COMMIT_SHA | grep -v 'HEAD' | grep -v 'main' | head -1 | sed 's|origin/||')
-          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "COMMIT_SHA=$COMMIT_SHA" >> $GITHUB_ENV
+      
+      - name: Finding Branch with SHA
+        run: |
+          RELEASE_BRANCH=$(git branch -r --contains ${{ env.COMMIT_SHA }} | head -1 | xargs)
+          BRANCH_NAME=${RELEASE_BRANCH#origin/}
+          echo "RELEASE_BRANCH=$RELEASE_BRANCH" >> $GITHUB_ENV
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+      
+      - name: Checking variables
+        run: |
+          echo "LATEST_TAG=${{ env.LATEST_TAG }}"
+          echo "COMMIT_SHA=${{ env.COMMIT_SHA }}"
+          echo "RELEASE_BRANCH=${{ env.RELEASE_BRANCH }}"
+          echo "BRANCH_NAME=${{ env.BRANCH_NAME }}"
+      
+      - name: Configure Git user
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
 
-      - name: Create Pull Request to main
+      - name: Fetch and checkout release branch
+        run: |
+          git fetch origin "${{ env.BRANCH_NAME }}"
+          git checkout "${{ env.BRANCH_NAME }}"
+
+      - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ steps.find_branch.outputs.branch }}
-          title: "Release ${{ steps.find_branch.outputs.tag }} to main"
+          branch: sync-release-${{ env.LATEST_TAG }}
+          title: "Sync Release ${{ env.LATEST_TAG }} to Main"
           base: main
           body: |
-            Automated PR to merge branch `${{ steps.find_branch.outputs.branch }}` (tag: `${{ steps.find_branch.outputs.tag }}`) into `main`.
+            ## Release Sync: ${{ env.LATEST_TAG }}
+            
+            This PR syncs the release branch `${{ env.BRANCH_NAME }}` into main for release `${{ env.LATEST_TAG }}`.
+            
+            **Details:**
+            - **Tag:** ${{ env.LATEST_TAG }}
+            - **Commit SHA:** ${{ env.COMMIT_SHA }}
+            - **Source Branch:** ${{ env.BRANCH_NAME }}
+            
+            Automated changes by [create-pull-request](https://github.com/peter-evans/create-pull-request) GitHub action
           draft: false
+          maintainer-can-modify: true
